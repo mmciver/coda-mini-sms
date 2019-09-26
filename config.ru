@@ -1,5 +1,5 @@
 require 'sinatra'
 require 'twilio-ruby'
-require 'app'
+require_relative 'app'
 
 run Sinatra::Application
