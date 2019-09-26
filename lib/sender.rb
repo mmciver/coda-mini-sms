@@ -6,6 +6,8 @@ module CodaMiniSMS
 
       def self.send(message, number)
         return empty_message if empty?(message)
+        puts "SID token length: #{ENV['TWILIO_SID'].length}"
+        puts "AUTH token length: #{ENV['TWILIO_AUTH_TOKEN'].length}"
 
         CLIENT.messages.create(
           from: ENV['TWILIO_PHONE_NUMBER'],
