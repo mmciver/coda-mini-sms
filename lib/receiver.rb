@@ -27,7 +27,10 @@ module CodaMiniSMS
       def self.number_status(sms)
         sql = "SELECT * FROM phone_numbers WHERE phone_number = '#{sms.from}'"
         result = DB.query(sql)
-        return 'unknown' if result.empty?
+        if result.empty?
+          add_to_database(sms)
+          return 'inactive'
+        end
 
         result.first.fetch('status')
       rescue => e
@@ -42,6 +45,7 @@ module CodaMiniSMS
 
       def self.handle_valid(sms)
         status = number_status(sms)
+
         case status
         when 'active'
           if sms.body =~ /broadcast/i
@@ -51,9 +55,9 @@ module CodaMiniSMS
           else
             send_commands(sms, status)
           end
-        when 'inactive', 'unknown'
-          if sms.body =~ /add me/
-            add_to_database(sms)
+        when 'inactive'
+          if sms.body =~ /add me/i
+            set_to_active
           else
             send_commands(sms, status)
           end
@@ -61,9 +65,8 @@ module CodaMiniSMS
       end
 
       def self.send_commands(sms, status)
-        msg = []
+        msg = ['Valid actions are:']
         msg << 'Text "Add me" to subscribe to the messaging list.' if status == 'inactive'
-        msg << 'Text "Coda Add Me" to subscribe to the messaging list.' if status == 'unknown'
         msg << 'Text "Remove me" to be removed from the messaging list.' if status == 'active'
         msg << 'Text "Broadcast" followed by a message to send that message to all active phone numbers' if status == 'active'
         msg << "The current status of your phone number is: #{status}"
@@ -74,10 +77,10 @@ module CodaMiniSMS
         sql = [
           'INSERT INTO phone_numbers',
           '(phone_number, status)',
-          "VALUES ('#{sms.from}', 'active')"
+          "VALUES ('#{sms.from}', 'inactive')"
         ]
         DB.execute(sql.join(' '))
-        send_status(sms)
+        Sender.send("Your phone number is not active. Text 'Add me' to enable receiving broadcast messages.", sms.from)
       end
 
       def self.set_inactive(sms)
@@ -87,7 +90,7 @@ module CodaMiniSMS
           "WHERE phone_number = '#{sms.from}'"
         ]
         DB.execute(sql.join(' '))
-        send_status(sms)
+        Sender.send("Your phone number has been set to inactive", sms.from)
       end
 
       def self.broadcast(sms)
