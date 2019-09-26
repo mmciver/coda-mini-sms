@@ -57,7 +57,7 @@ module CodaMiniSMS
           end
         when 'inactive'
           if sms.body =~ /add me/i
-            set_to_active
+            set_active(sms)
           else
             send_commands(sms, status)
           end
