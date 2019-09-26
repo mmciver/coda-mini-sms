@@ -18,6 +18,10 @@ module CodaMiniSMS
   end
 end
 
+get '/' do
+  'CoDA Mini group in Bellingham WA. Text "CoDA" to 360-228-2089 for information'
+end
+
 get '/incoming-text' do
   CodaMiniSMS::App::Receiver.receive(params)
 end
