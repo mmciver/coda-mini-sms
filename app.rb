@@ -1,7 +1,6 @@
 require 'sinatra'
 require 'twilio-ruby'
 require 'pg'
-require 'pry'
 require_relative 'lib/db'
 require_relative 'lib/sms'
 require_relative 'lib/sender'
