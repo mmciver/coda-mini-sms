@@ -99,7 +99,11 @@ module CodaMiniSMS
           "WHERE phone_number = '#{sms.from}'"
         ]
         DB.execute(sql.join(' '))
-        Sender.send("Your phone number has been set to active.", sms.from)
+        Sender.send([
+          "Your phone number has been set to active.",
+          "Text 'Remove me' to remove yourself from the subscription list.",
+          "Text 'Broadcast' followed by a message to send to all active numbers."
+        ].join(' '), sms.from)
       end
 
       def self.broadcast(sms)
