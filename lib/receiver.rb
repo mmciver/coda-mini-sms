@@ -107,7 +107,7 @@ module CodaMiniSMS
       end
 
       def self.broadcast(sms)
-        message = sms.body.gsub(/^.*broadcast/i,'').strip
+        message = sms.body.gsub(/^broadcast/i,'').strip
         num_sent = 0
         active_phone_numbers.each do |phone_number|
           next if sms.from == phone_number
