@@ -92,6 +92,16 @@ module CodaMiniSMS
         Sender.send("Your phone number has been set to inactive", sms.from)
       end
 
+      def self.set_active(sms)
+        sql = [
+          'UPDATE phone_numbers',
+          "SET status = 'active'",
+          "WHERE phone_number = '#{sms.from}'"
+        ]
+        DB.execute(sql.join(' '))
+        Sender.send("Your phone number has been set to active.", sms.from)
+      end
+
       def self.broadcast(sms)
         message = sms.body.gsub(/^.*broadcast/i,'').strip
         num_sent = 0
