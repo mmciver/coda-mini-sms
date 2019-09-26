@@ -80,7 +80,6 @@ module CodaMiniSMS
           "VALUES ('#{sms.from}', 'inactive')"
         ]
         DB.execute(sql.join(' '))
-        Sender.send("Your phone number is not active. Text 'Add me' to enable receiving broadcast messages.", sms.from)
       end
 
       def self.set_inactive(sms)
