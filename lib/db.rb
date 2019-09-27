@@ -17,7 +17,6 @@ module CodaMiniSMS
       def self.execute(sql)
         begin
           connection = PG.connect(ENV['DATABASE_URL'])
-          puts "Executing: #{sql}"
           connection.exec(sql)
         rescue PG::Error => e
           puts e.message
