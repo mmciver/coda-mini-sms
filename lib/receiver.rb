@@ -43,13 +43,19 @@ module CodaMiniSMS
         Sender.send("Your status is: #{number_status(sms)}", sms.from)
       end
 
+      def self.validate_number(sms)
+        status = Status.of_number(sms.from)
+        add_to_database(sms) if status == 'unknown'
+        Status.of_number(sms.from)
+      end
+
       def self.handle_valid(sms)
-        status = number_status(sms)
+        status = validate_number(sms)
 
         case status
         when 'active'
           if sms.body =~ /broadcast/i
-            broadcast(sms)
+            set_broadcast(sms)
           elsif sms.body =~ /^remove me$/i
             set_inactive(sms)
           elsif sms.body =~ /^query$/i
@@ -57,6 +63,8 @@ module CodaMiniSMS
           else
             send_commands(sms, status)
           end
+        when 'broadcast'
+          send_broadcast(sms)
         when 'inactive'
           if sms.body =~ /add me/i
             set_active(sms)
@@ -112,41 +120,29 @@ module CodaMiniSMS
         sql = [
           'UPDATE phone_numbers',
           "SET status = 'broadcast'",
+          "reference = '#{Time.new.to_s}'",
           "WHERE phone_number = '#{sms.from}'"
         ]
         DB.execute(sql.join(' '))
+        Sender.send("All messages you send to this phone number will be sent to #{Status.active_numbers.length - 1} phone numbers for the next 15 minutes.", sms.from)
       end
 
-      def self.broadcast(sms)
-        message = sms.body.gsub(/^broadcast/i,'').gsub("'",'').strip
+      def self.send_broadcast(sms)
         num_sent = 0
-        destinations = active_phone_numbers
-        Sender.send("Sending this message to #{destinations.length - 1} phone numbers: #{message}", sms.from)
+        destinations = Status.active_numbers(false)
         destinations.each do |phone_number|
-          next if sms.from == phone_number
-
-          Sender.send(message, phone_number)
-          num_sent += 1
-        end
-        Sender.send("Your broadcast message has been sent to #{num_sent} phone numbers.", sms.from)
-      end
-
-      def self.active_phone_numbers
-        sql = "SELECT * FROM phone_numbers WHERE status = 'active'"
-        DB.query(sql).map { |row| row['phone_number'] }.uniq
-      end
-
-      def self.redacted_phone_numbers(status)
-        sql = "SELECT * FROM phone_numbers WHERE status = '#{status}'"
-        DB.query(sql).each_with_index.map do |row, i|
-          "#{i + 1}: #{row['phone_number'][-4..-1]}"
+          if sms.from == phone_number
+            Sender.send(sms.body, phone_number)
+            num_sent += 1
+          else
+            next
+          end
         end
       end
 
       def self.send_redacted_numbers(sms)
-        sql = "SELECT * FROM phone_numbers"
-        active = redacted_phone_numbers('active')
-        inactive = redacted_phone_numbers('inactive')
+        active = Status.active_numbers(true)
+        inactive = Status.inactive_numbers(true)
         msg = [
           "#{active.length} active phone numbers",
           active,

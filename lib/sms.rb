@@ -10,9 +10,7 @@ module CodaMiniSMS
       end
 
       def validated?
-        body =~ /coda/i || DB.query(
-          "SELECT * FROM phone_numbers WHERE phone_number = '#{from}'"
-        ).length > 0
+        body =~ /coda/i || Status.of_number(from) != 'unknown'
       end
     end
   end
