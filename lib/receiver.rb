@@ -60,6 +60,8 @@ module CodaMiniSMS
             set_inactive(sms)
           elsif sms.body =~ /^query$/i
             send_redacted_numbers(sms)
+          elsif sms.body =~ /^recent$/i
+            send_last_week_broadcasts(sms)
           else
             send_commands(sms, status)
           end
@@ -74,6 +76,16 @@ module CodaMiniSMS
         end
       end
 
+      def self.last_week_of_broadcast
+        msgs = []
+        DB.query('SELECT * FROM broadcasts').each do |row|
+          t = Time.parse(row['stamp'])
+          next if (Time.new - t) > (60 * 60 * 24 * 7)
+          msgs << "Sent on: #{t.to_s[0..9}\n\n#{row['body']}"
+        end
+        msgs.sort
+      end
+
       def self.send_commands(sms, status)
         msg = ['Valid actions are:']
         msg << 'Text "Add me" to subscribe to the messaging list.' if status == 'inactive'
@@ -83,6 +95,14 @@ module CodaMiniSMS
         Sender.send(msg.join("\n"), sms.from)
       end
 
+      def self.send_last_week_broadcasts(sms)
+        messages = last_week_of_broadcasts
+        Sender.send("There were #{messages.length} broadcast over the past week. These are the messages:", sms.from)
+        last_week_of_broadcasts.each do |message|
+          Sender.send(message, sms.from)
+        end
+      end
+
       def self.add_to_database(sms)
         sql = [
           'INSERT INTO phone_numbers',
@@ -90,6 +110,7 @@ module CodaMiniSMS
           "VALUES ('#{sms.from}', 'inactive')"
         ]
         DB.execute(sql.join(' '))
+        send_last_week_broadcasts(sms)
       end
 
       def self.set_inactive(sms)
@@ -129,6 +150,15 @@ module CodaMiniSMS
 
       def self.send_broadcast(sms)
         num_sent = 0
+        DB.execute([
+          "INSERT INTO broadcasts (from_number, message, stamp) VALUES ('",
+          [
+            sms.from,
+            sms.body,
+            Time.new
+          ].join("', '"),
+          "')"
+        ].join(' '))
         destinations = Status.active_numbers(false)
         destinations.each do |phone_number|
           if sms.from == phone_number
