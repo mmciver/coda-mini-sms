@@ -48,7 +48,7 @@ module CodaMiniSMS
 
         case status
         when 'active'
-          if sms.body =~ /broadcast/i
+          if sms.body =~ /^broadcast$/i
             broadcast(sms)
           elsif sms.body =~ /^remove me$/i
             set_inactive(sms)
@@ -70,7 +70,7 @@ module CodaMiniSMS
         msg = ['Valid actions are:']
         msg << 'Text "Add me" to subscribe to the messaging list.' if status == 'inactive'
         msg << 'Text "Remove me" to be removed from the messaging list.' if status == 'active'
-        msg << 'Text "Broadcast" followed by a message to send that message to all active phone numbers' if status == 'active'
+        msg << 'Text "Broadcast" to set your phone to automatically send all messages to everyone currently active. This will be turned on for 5 minutes' if status == 'active'
         msg << "The current status of your phone number is: #{status}"
         Sender.send(msg.join("\n"), sms.from)
       end
@@ -108,11 +108,21 @@ module CodaMiniSMS
         ].join("\n"), sms.from)
       end
 
+      def self.set_broadcast
+        sql = [
+          'UPDATE phone_numbers',
+          "SET status = 'broadcast'",
+          "WHERE phone_number = '#{sms.from}'"
+        ]
+        DB.execute(sql.join(' '))
+      end
+
       def self.broadcast(sms)
         message = sms.body.gsub(/^broadcast/i,'').gsub("'",'').strip
         num_sent = 0
         destinations = active_phone_numbers
         Sender.send("Sending this message to #{destinations.length - 1} phone numbers: #{message}", sms.from)
+        return false
         destinations.each do |phone_number|
           next if sms.from == phone_number
 
