@@ -72,7 +72,7 @@ module CodaMiniSMS
         msg << 'Text "Remove me" to be removed from the messaging list.' if status == 'active'
         msg << 'Text "Broadcast" followed by a message to send that message to all active phone numbers' if status == 'active'
         msg << "The current status of your phone number is: #{status}"
-        Sender.send(msg.join(' '), sms.from)
+        Sender.send(msg.join("\n"), sms.from)
       end
 
       def self.add_to_database(sms)
@@ -105,7 +105,7 @@ module CodaMiniSMS
           "Your phone number has been set to active.",
           "Text 'Remove me' to remove yourself from the subscription list.",
           "Text 'Broadcast' followed by a message to send to all active numbers."
-        ].join(' '), sms.from)
+        ].join("\n"), sms.from)
       end
 
       def self.broadcast(sms)
