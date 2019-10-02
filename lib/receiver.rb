@@ -122,9 +122,10 @@ module CodaMiniSMS
           "SET status = 'broadcast'",
           "reference = '#{Time.new.to_s}'",
           "WHERE phone_number = '#{sms.from}'"
-        ]
-        DB.execute(sql.join(' '))
+        ].join(' ')
+        DB.execute(sql)
         Sender.send("All messages you send to this phone number will be sent to #{Status.active_numbers.length - 1} phone numbers for the next 15 minutes.", sms.from)
+        Sender.send(sql, sms.from)
         Sender.send(DB.query("SELECT * FROM phone_numbers").inspect, sms.from)
       end
 
