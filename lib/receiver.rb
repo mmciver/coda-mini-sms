@@ -76,7 +76,7 @@ module CodaMiniSMS
         end
       end
 
-      def self.last_week_of_broadcast
+      def self.last_week_of_broadcasts
         msgs = []
         DB.query('SELECT * FROM broadcasts').each do |row|
           t = Time.parse(row['stamp'])
