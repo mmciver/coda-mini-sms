@@ -81,7 +81,7 @@ module CodaMiniSMS
         DB.query('SELECT * FROM broadcasts').each do |row|
           t = Time.parse(row['stamp'])
           next if (Time.new - t) > (60 * 60 * 24 * 7)
-          msgs << "Sent on: #{t.to_s[0..9]}\n\n#{row['body']}"
+          msgs << "Sent on: #{t.to_s[0..9]}\n\n#{row['message']}"
         end
         msgs.sort
       end
