@@ -109,7 +109,9 @@ module CodaMiniSMS
       def self.broadcast(sms)
         message = sms.body.gsub(/^broadcast/i,'').gsub("'",'').strip
         num_sent = 0
-        active_phone_numbers.each do |phone_number|
+        destinations = active_phone_numbers
+        Sender.send("Sending this message to #{destinations.length - 1} phone numbers: #{message}", sms.from)
+        destinations.each do |phone_number|
           next if sms.from == phone_number
 
           Sender.send(message, phone_number)
@@ -121,6 +123,22 @@ module CodaMiniSMS
       def self.active_phone_numbers
         sql = "SELECT * FROM phone_numbers WHERE status = 'active'"
         DB.query(sql).map { |row| row['phone_number'] }.uniq
+      end
+
+      def self.redacted_phone_numbers(status)
+        sql = "SELECT * FROM phone_numbers WHERE status = #{status}"
+        DB.query(sql).each_with_index.map { |row, i| "#{i}: #{row['phone_number'][-4..-1]}" }
+      end
+
+      def self.redacted_numbers
+        sql = "SELECT * FROM phone_numbers"
+        msg = [
+          "#{active.length} active phone numbers",
+          redacted_phone_numbers('active'),
+          "#{inactive.length} inactive phone numbers.",
+          redacted_phone_numbers('inactive')
+        ].flatten.join("\n")
+        Sender.send(msg, sms.from)
       end
     end
   end
