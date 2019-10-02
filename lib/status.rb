@@ -1,17 +1,21 @@
+# frozen_string_literal: true
+
 module CodaMiniSMS
   module App
+    # Handles number status
     module Status
       def self.clear
-        numbers = current_broadcasts
-        return false if numbers.empty?
+        return false if current_broadcasts.empty?
 
-        numbers.each do |row|
-          puts row.inspect
+        current_broadcasts.each do |row|
           start_time = Time.parse(row['reference'])
-          if (Time.new - start_time) > 900
-            sql = "UPDATE phone_numbers SET status = 'active' WHERE phone_number = '#{row['phone_number']}'"
-            DB.execute(sql)
-          end
+          next unless (Time.new - start_time) > 900
+
+          sql = [
+            'UPDATE phone_numbers SET status = ',
+            "'active' WHERE phone_number = '#{row['phone_number']}'"
+          ].join(' ')
+          DB.execute(sql)
         end
       end
 
@@ -21,7 +25,10 @@ module CodaMiniSMS
       end
 
       def self.active_numbers(redact = false)
-        sql = "SELECT * FROM phone_numbers WHERE status IN ('active', 'broadcast')"
+        sql = [
+          'SELECT * FROM phone_numbers',
+          "WHERE status IN ('active', 'broadcast')"
+        ].join(' ')
         DB.query(sql).map do |row|
           redact ? last_4(row['phone_number']) : row['phone_number']
         end

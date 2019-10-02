@@ -1,5 +1,8 @@
+# frozen_string_literal: true
+
 module CodaMiniSMS
   module App
+    # each sms
     class SMS
       attr_reader :body, :from, :to, :params
       def initialize(params)

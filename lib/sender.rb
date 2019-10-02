@@ -1,8 +1,13 @@
+# frozen_string_literal: true
+
 module CodaMiniSMS
   module App
+    # Sending sms replies
     module Sender
-
-      CLIENT = Twilio::REST::Client.new(ENV['TWILIO_SID'], ENV['TWILIO_AUTH_TOKEN'])
+      CLIENT = Twilio::REST::Client.new(
+        ENV['TWILIO_SID'],
+        ENV['TWILIO_AUTH_TOKEN']
+      )
 
       def self.send(message, number)
         return empty_message if empty?(message)
