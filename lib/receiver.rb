@@ -52,6 +52,8 @@ module CodaMiniSMS
             broadcast(sms)
           elsif sms.body =~ /^remove me$/i
             set_inactive(sms)
+          elsif sms.body =~ /^query$/i
+            send_redacted_numbers(sms)
           else
             send_commands(sms, status)
           end
@@ -130,7 +132,7 @@ module CodaMiniSMS
         DB.query(sql).each_with_index.map { |row, i| "#{i}: #{row['phone_number'][-4..-1]}" }
       end
 
-      def self.redacted_numbers
+      def self.send_redacted_numbers(sms)
         sql = "SELECT * FROM phone_numbers"
         msg = [
           "#{active.length} active phone numbers",
