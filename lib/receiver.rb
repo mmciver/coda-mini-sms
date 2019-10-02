@@ -125,6 +125,7 @@ module CodaMiniSMS
         ]
         DB.execute(sql.join(' '))
         Sender.send("All messages you send to this phone number will be sent to #{Status.active_numbers.length - 1} phone numbers for the next 15 minutes.", sms.from)
+        Sender.send(DB.query("SELECT * FROM phone_numbers").inspect, sms.from)
       end
 
       def self.send_broadcast(sms)
