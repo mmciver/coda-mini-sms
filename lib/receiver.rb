@@ -130,7 +130,7 @@ module CodaMiniSMS
       def self.redacted_phone_numbers(status)
         sql = "SELECT * FROM phone_numbers WHERE status = '#{status}'"
         DB.query(sql).each_with_index.map do |row, i|
-          "#{i}: #{row['phone_number'][-4..-1]}"
+          "#{i + 1}: #{row['phone_number'][-4..-1]}"
         end
       end
 
