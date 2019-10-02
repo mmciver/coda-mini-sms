@@ -3,14 +3,13 @@ module CodaMiniSMS
     module Status
       def self.clear
         numbers = current_broadcasts
-        puts numbers.inspect
         return false if numbers.empty?
 
         numbers.each do |row|
           puts row.inspect
           start_time = Time.parse(row['reference'])
           if (Time.new - start_time) > 900
-            sql = "UPDATE messages SET status = 'active' WHERE phone_number = '#{row['phone_number']}'"
+            sql = "UPDATE phone_numbers SET status = 'active' WHERE phone_number = '#{row['phone_number']}'"
             DB.execute(sql)
           end
         end
