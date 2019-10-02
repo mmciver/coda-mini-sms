@@ -116,7 +116,7 @@ module CodaMiniSMS
         ].join("\n"), sms.from)
       end
 
-      def self.set_broadcast
+      def self.set_broadcast(sms)
         sql = [
           'UPDATE phone_numbers',
           "SET status = 'broadcast'",
