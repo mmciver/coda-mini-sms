@@ -78,7 +78,7 @@ module CodaMiniSMS
         msg = ['Valid actions are:']
         msg << 'Text "Add me" to subscribe to the messaging list.' if status == 'inactive'
         msg << 'Text "Remove me" to be removed from the messaging list.' if status == 'active'
-        msg << 'Text "Broadcast" to set your phone to automatically send all messages to everyone currently active. This will be turned on for 5 minutes' if status == 'active'
+        msg << 'Text "Broadcast" to set your phone to automatically send all messages to everyone currently active. This will be turned on for 15 minutes' if status == 'active'
         msg << "The current status of your phone number is: #{status}"
         Sender.send(msg.join("\n"), sms.from)
       end
