@@ -134,11 +134,13 @@ module CodaMiniSMS
 
       def self.send_redacted_numbers(sms)
         sql = "SELECT * FROM phone_numbers"
+        active = redacted_phone_numbers('active')
+        inactive = redacted_phone_numbers('inactive')
         msg = [
           "#{active.length} active phone numbers",
-          redacted_phone_numbers('active'),
+          active,
           "#{inactive.length} inactive phone numbers.",
-          redacted_phone_numbers('inactive')
+          inactive
         ].flatten.join("\n")
         Sender.send(msg, sms.from)
       end
