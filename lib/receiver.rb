@@ -90,7 +90,7 @@ module CodaMiniSMS
         msg = ['Valid actions are:']
         msg << 'Text "Add me" to subscribe to the messaging list.' if status == 'inactive'
         msg << 'Text "Remove me" to be removed from the messaging list.' if status == 'active'
-        msg << 'Text "Broadcast" to set your phone to automatically send all messages to everyone currently active. This will be turned on for 15 minutes' if status == 'active'
+        msg << 'Text "Broadcast" to set your phone to automatically send all messages to everyone currently active. This will be turned on for 30 minutes' if status == 'active'
         msg << "The current status of your phone number is: #{status}"
         Sender.send(msg.join("\n"), sms.from)
       end
@@ -110,7 +110,6 @@ module CodaMiniSMS
           "VALUES ('#{sms.from}', 'inactive')"
         ]
         DB.execute(sql.join(' '))
-        send_last_week_broadcasts(sms)
       end
 
       def self.set_inactive(sms)
@@ -133,8 +132,9 @@ module CodaMiniSMS
         Sender.send([
           "Your phone number has been set to active.",
           "Text 'Remove me' to remove yourself from the subscription list.",
-          "Text 'Broadcast' to enable sending to all active phone numbers for 15 minutes."
+          "Text 'Broadcast' to enable sending to all active phone numbers for 30 minutes."
         ].join("\n"), sms.from)
+        send_last_week_broadcasts(sms)
       end
 
       def self.set_broadcast(sms)
@@ -145,7 +145,7 @@ module CodaMiniSMS
           "WHERE phone_number = '#{sms.from}'"
         ].join(' ')
         DB.execute(sql)
-        Sender.send("All messages you send to this phone number will be sent to all active phone numbers (#{Status.active_numbers.length - 1} in number) for the next 15 minutes.", sms.from)
+        Sender.send("All messages you send to this phone number will be sent to all active phone numbers (#{Status.active_numbers.length - 1} in number) for the next 30 minutes.", sms.from)
       end
 
       def self.send_broadcast(sms)
@@ -161,12 +161,10 @@ module CodaMiniSMS
         ].join(' '))
         destinations = Status.active_numbers(false)
         destinations.each do |phone_number|
-          if sms.from == phone_number
-            Sender.send(sms.body, phone_number)
-            num_sent += 1
-          else
-            next
-          end
+          next if sms.from == phone_number
+
+          Sender.send(sms.body, phone_number)
+          num_sent += 1
         end
       end
 
