@@ -122,7 +122,6 @@ module CodaMiniSMS
         num_sent = 0
         destinations = active_phone_numbers
         Sender.send("Sending this message to #{destinations.length - 1} phone numbers: #{message}", sms.from)
-        return false
         destinations.each do |phone_number|
           next if sms.from == phone_number
 
