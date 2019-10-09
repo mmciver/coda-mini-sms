@@ -137,7 +137,7 @@ module CodaMiniSMS
         Sender.send([
           "Your phone number has been set to active.",
           "Text 'Remove me' to remove yourself from the subscription list.",
-          "Text 'Broadcast' to enable sending to all active phone numbers for 30 minutes."
+          "Text 'Broadcast' to enable sending to all active phone numbers for 30 minutes.",
           "Text 'Recent' to see all broadcast messages for the past week."
         ].join("\n"), sms.from)
         send_last_week_broadcasts(sms)
