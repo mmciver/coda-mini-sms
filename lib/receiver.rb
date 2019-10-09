@@ -54,8 +54,8 @@ module CodaMiniSMS
 
         case status
         when 'active'
-          if sms.body =~ /broadcast/i
-            set_broadcast(sms)
+          if sms.body =~ /^broadcast$/i
+            set_broadcast(sms, :on)
           elsif sms.body =~ /^remove me$/i
             set_inactive(sms)
           elsif sms.body =~ /^query$/i
@@ -66,7 +66,11 @@ module CodaMiniSMS
             send_commands(sms, status)
           end
         when 'broadcast'
-          send_broadcast(sms)
+          if sms.body =~ /^stop$/i
+            set_broadcast(sms, :off)
+          else
+            send_broadcast(sms)
+          end
         when 'inactive'
           if sms.body =~ /add me/i
             set_active(sms)
@@ -91,6 +95,7 @@ module CodaMiniSMS
         msg << 'Text "Add me" to subscribe to the messaging list.' if status == 'inactive'
         msg << 'Text "Remove me" to be removed from the messaging list.' if status == 'active'
         msg << 'Text "Broadcast" to set your phone to automatically send all messages to everyone currently active. This will be turned on for 30 minutes' if status == 'active'
+        msg << 'Text "Recent" to see all broadcast messages for the past week.'
         msg << "The current status of your phone number is: #{status}"
         Sender.send(msg.join("\n"), sms.from)
       end
@@ -133,19 +138,31 @@ module CodaMiniSMS
           "Your phone number has been set to active.",
           "Text 'Remove me' to remove yourself from the subscription list.",
           "Text 'Broadcast' to enable sending to all active phone numbers for 30 minutes."
+          "Text 'Recent' to see all broadcast messages for the past week."
         ].join("\n"), sms.from)
         send_last_week_broadcasts(sms)
       end
 
-      def self.set_broadcast(sms)
-        sql = [
-          'UPDATE phone_numbers',
-          "SET status = 'broadcast',",
-          "reference = '#{Time.new.to_s}'",
-          "WHERE phone_number = '#{sms.from}'"
-        ].join(' ')
+      def self.set_broadcast(sms, direction)
+        case direction
+        when :on
+          sql = [
+            'UPDATE phone_numbers',
+            "SET status = 'broadcast',",
+            "reference = '#{Time.new.to_s}'",
+            "WHERE phone_number = '#{sms.from}'"
+          ].join(' ')
+          Sender.send("All messages you send to this phone number will be sent to all active phone numbers (#{Status.active_numbers.length - 1} in number) for the next 30 minutes.", sms.from)
+        when :off
+          sql = [
+            'UPDATE phone_numbers',
+            "SET status = 'active',",
+            "reference = '#{Time.new.to_s}'",
+            "WHERE phone_number = '#{sms.from}'"
+          ].join(' ')
+          Sender.send("Broadcasting stopped. Text 'Recent' to see all broadcast messages for the past week.", sms.from)
+        end
         DB.execute(sql)
-        Sender.send("All messages you send to this phone number will be sent to all active phone numbers (#{Status.active_numbers.length - 1} in number) for the next 30 minutes.", sms.from)
       end
 
       def self.send_broadcast(sms)
