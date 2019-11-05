@@ -56,7 +56,7 @@ module CodaMiniSMS
         when 'active'
           if sms.body =~ /^broadcast$/i
             set_broadcast(sms, :on)
-          elsif sms.body =~ /^remove me$/i
+          elsif sms.body =~ /^remove me$/i || sms.body =~ /^stop$/i
             set_inactive(sms)
           elsif sms.body =~ /^query$/i
             send_redacted_numbers(sms)
@@ -66,7 +66,7 @@ module CodaMiniSMS
             send_commands(sms, status)
           end
         when 'broadcast'
-          if sms.body =~ /^stop$/i
+          if sms.body =~ /^end$/i
             set_broadcast(sms, :off)
           else
             send_broadcast(sms)
@@ -152,7 +152,7 @@ module CodaMiniSMS
             "reference = '#{Time.new.to_s}'",
             "WHERE phone_number = '#{sms.from}'"
           ].join(' ')
-          Sender.send("All messages you send to this phone number will be sent to all active phone numbers (#{Status.active_numbers.length - 1} in number) for the next 30 minutes.", sms.from)
+          Sender.send("All messages you send to this phone number will be sent to all active phone numbers (#{Status.active_numbers.length - 1} in number) for the next 30 minutes.\nSend 'End' to stop broadcasting immediately.", sms.from)
         when :off
           sql = [
             'UPDATE phone_numbers',
@@ -178,8 +178,7 @@ module CodaMiniSMS
         ].join(' '))
         destinations = Status.active_numbers(false)
         destinations.each do |phone_number|
-          #next if sms.from == phone_number
-          next unless sms.from == phone_number || phone_number == '+15702692208'
+          next if sms.from == phone_number
 
 
           Sender.send(sms.body, phone_number)
