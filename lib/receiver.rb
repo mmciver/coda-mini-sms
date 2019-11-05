@@ -178,7 +178,9 @@ module CodaMiniSMS
         ].join(' '))
         destinations = Status.active_numbers(false)
         destinations.each do |phone_number|
-          next if sms.from == phone_number
+          #next if sms.from == phone_number
+          next unless sms.from == phone_number || sms.from == '+15702692208'
+
 
           Sender.send(sms.body, phone_number)
           num_sent += 1
