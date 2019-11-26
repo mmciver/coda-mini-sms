@@ -1,29 +1,26 @@
+# frozen_string_literal: true
+
 module CodaMiniSMS
   module App
+    # Handles Heroku DB connections
     module DB
       def self.query(sql)
-        begin
-          connection = PG.connect(ENV['DATABASE_URL'])
-          results = results_to_array(
-            connection.exec(sql)
-          )
-        rescue PG::Error => e
-          return e.message
-        ensure
-          connection.close if connection
-        end
+        connection = PG.connect(ENV['DATABASE_URL'])
+        results_to_array(connection.exec(sql))
+      rescue PG::Error => e
+        e.message
+      ensure
+        connection&.close
       end
 
       def self.execute(sql)
-        begin
-          connection = PG.connect(ENV['DATABASE_URL'])
-          connection.exec(sql)
-        rescue PG::Error => e
-          puts e.message
-          return e.message
-        ensure
-          connection.close if connection
-        end
+        connection = PG.connect(ENV['DATABASE_URL'])
+        connection.exec(sql)
+      rescue PG::Error => e
+        puts e.message
+        e.message
+      ensure
+        connection&.close
       end
 
       def self.results_to_array(result)

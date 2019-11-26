@@ -17,6 +17,14 @@ module CodaMiniSMS
           to: number,
           body: message
         )
+      rescue Twilio::REST::RestError => e
+        sql = [
+          'UPDATE phone_numbers',
+          "SET status = 'inactive'",
+          "WHERE phone_number = '#{number}'"
+        ]
+        DB.execute(sql.join(' '))
+        return "Number is blacklisted" if e.code == 21610
       end
 
       def self.empty?(message)

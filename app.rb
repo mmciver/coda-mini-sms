@@ -7,6 +7,8 @@ require_relative 'lib/sms'
 require_relative 'lib/sender'
 require_relative 'lib/receiver'
 require_relative 'lib/status'
+require_relative 'lib/group'
+require_relative 'lib/commands/commands'
 
 module CodaMiniSMS
 
@@ -17,6 +19,8 @@ module CodaMiniSMS
   autoload :Sender, 'lib/sender'
   autoload :Receiver, 'lib/receiver'
   autoload :Status, 'lib/status'
+  autoload :Group, 'lib/group'
+  autoload :Commands, 'lib/commands/commands'
 
   end
 end

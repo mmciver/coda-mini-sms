@@ -54,9 +54,9 @@ module CodaMiniSMS
 
         case status
         when 'active'
-          if sms.body =~ /^broedcast$/i
+          if sms.body =~ /^broadcast$/i
             set_broadcast(sms, :on)
-          elsif sms.body =~ /^remove me$/i || sms.body =~ /^stop$/i
+          elsif sms.body =~ /^(?:remove me|stop|end)$/i
             set_inactive(sms)
           elsif sms.body =~ /^query$/i
             send_redacted_numbers(sms)
